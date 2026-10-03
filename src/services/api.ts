@@ -1,6 +1,7 @@
 import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react'
 import { seedBatches } from '../data/seed'
-import type { Batch } from '../types'
+import type { Batch, Deviation, EffectObservation } from '../types'
+import { releaseReadiness } from './observation'
 
 export const haccpApi = createApi({
   reducerPath: 'haccpApi',
@@ -9,12 +10,12 @@ export const haccpApi = createApi({
     loadBatchSnapshot: builder.query<Batch[], void>({
       queryFn: async () => ({ data: structuredClone(seedBatches) })
     }),
-    checkReleaseReadiness: builder.query<{ ready: boolean; reasons: string[] }, { batchId: string; openDeviations: number }>({
-      queryFn: async ({ batchId, openDeviations }) => ({
-        data: {
-          ready: openDeviations === 0,
-          reasons: openDeviations === 0 ? [] : [`${batchId}仍有${openDeviations}项未关闭偏差`]
-        }
+    checkReleaseReadiness: builder.query<
+      { ready: boolean; reasons: string[] },
+      { batch: Batch; deviations: Deviation[]; observations: EffectObservation[] }
+    >({
+      queryFn: async ({ batch, deviations, observations }) => ({
+        data: releaseReadiness(batch, deviations, observations)
       })
     })
   })

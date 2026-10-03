@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch, RootState } from '../store'
 import { createDeviation, reviewDeviation, saveInvestigation } from '../store/haccpSlice'
 import type { DecisionType, Deviation, Investigation } from '../types'
+import { ObservationCard } from '../components/ObservationCard'
 
 export function DeviationWorkbench() {
   const dispatch = useDispatch<AppDispatch>()
@@ -33,9 +34,15 @@ export function DeviationWorkbench() {
           <Field label="返工或报废指令"><Textarea value={activeInvestigation?.reworkInstruction ?? ''} onChange={(_, data) => setInvestigation({ ...(activeInvestigation ?? selected.investigation), reworkInstruction: data.value })} /></Field>
           <div className="record-actions">
             <Button disabled={!activeInvestigation?.cause || !activeInvestigation?.evidence} onClick={() => dispatch(saveInvestigation({ id: selected.id, investigation: activeInvestigation! }))}>提交调查</Button>
-            <Button appearance="primary" disabled={selected.status !== '待复核'} onClick={() => dispatch(reviewDeviation({ id: selected.id, approved: true, note: '调查证据充分，纠偏措施可执行。', reviewer: '质量负责人 秦岚' }))}>复核通过</Button>
+            <Button appearance="primary" disabled={selected.status !== '待复核'} onClick={() => dispatch(reviewDeviation({ id: selected.id, approved: true, note: '调查证据充分，纠偏措施可执行，进入观察期确认。', reviewer: '质量负责人 秦岚' }))}>复核通过</Button>
           </div>
           <Button appearance="subtle" disabled={selected.status !== '待复核'} onClick={() => dispatch(reviewDeviation({ id: selected.id, approved: false, note: '需补充设备故障诊断记录。', reviewer: '质量负责人 秦岚' }))}>退回补充证据</Button>
+          {selected.status === '已关闭' && (
+            <div className="observation-mount">
+              <ObservationCard windowName="偏差工作台窗口" deviationId={selected.id} />
+            </div>
+          )}
+          {selected.status !== '已关闭' && <p className="hint-text">复核通过不直接放行：自动开启待观察，连续合格达标且无同控制点新偏差后才确认效果。</p>}
         </div>}
       </div>
       {showCreate && <div className="edit-panel">
